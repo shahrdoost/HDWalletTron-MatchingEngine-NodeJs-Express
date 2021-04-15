@@ -65,7 +65,7 @@ module.exports = class Application {
     }
 
     setRouters(){
-      app.use(require('./routes/web/index'))  
+      app.use(require('./routes'))
     }
 
 

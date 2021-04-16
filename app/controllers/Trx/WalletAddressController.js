@@ -1,4 +1,4 @@
-const controller = require('./controller')
+const controller = require('../controller')
 const hdAddress = require("hd-address")
 
 class WalletAddressController extends controller {

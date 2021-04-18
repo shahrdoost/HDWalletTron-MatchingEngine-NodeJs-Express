@@ -9,7 +9,7 @@ const TronGridController = require('../controllers/Trx/TronGridController')
 router.get('/' , IndexController.index )
 
 //generator
-router.get('/generator' , WalletAddressController.Generator )
+router.post('/generator' , WalletAddressController.Generator )
 
 //tronGrid
 router.get('/trongrid/ac' , TronGridController.GetAccount )

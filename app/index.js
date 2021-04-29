@@ -1,5 +1,3 @@
-
-
 const express = require('express');
 const app = express();
 const http = require('http')
@@ -12,6 +10,7 @@ const MongoStore = require('connect-mongo');
 const mongoose = require('mongoose')
 const flash = require('connect-flash')
 const passport = require('passport')
+
 
 module.exports = class Application {
 
@@ -36,14 +35,14 @@ module.exports = class Application {
     setMongoConnection() {
 
         mongoose.Promise = global.Promise;
-        mongoose.connect('mongodb://localhost/exchange' , {
+        mongoose.connect('mongodb://localhost/exchange', {
             useNewUrlParser: true,
             useUnifiedTopology: true,
             useFindAndModify: false,
             useCreateIndex: true
-          });
+        });
 
-        
+
     }
 
     setConfig() {
@@ -51,24 +50,22 @@ module.exports = class Application {
         app.use(express.static('public'))
         app.set('view engine', 'ejs')
         app.set('views', path.resolve('./resourse/views'))
-        app.use(bodyParser.urlencoded({ extended: true }))
+        app.use(bodyParser.urlencoded({extended: true}))
         app.use(bodyParser.json())
-       // app.use(validator());
-       app.use(session({
-        secret: 'foo',
-        store: MongoStore.create( {mongoUrl: 'mongodb://localhost/exchange'})
-      }));
+        // app.use(validator());
+        app.use(session({
+            secret: 'foo',
+            store: MongoStore.create({mongoUrl: 'mongodb://localhost/exchange'})
+        }));
         app.use(cookieParser('mysecretkey'))
         app.use(flash());
 
 
     }
 
-    setRouters(){
-      app.use(require('./routes'))
+    setRouters() {
+        app.use(require('./routes'))
     }
-
-
 
 
 }

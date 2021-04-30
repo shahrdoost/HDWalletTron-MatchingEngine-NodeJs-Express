@@ -33,6 +33,9 @@ router.post('/order/send', [
     //check('password').isLength({min: 5}).trim().escape()
 ], OrdersController.AddOrder)
 
+//GetLastOrder
+router.get('/order/last', OrdersController.GetMatchedOrder)
+
 //check order
 router.get('/match/check', MatchesController.CheckOrders)
 

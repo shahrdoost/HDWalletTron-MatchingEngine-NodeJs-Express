@@ -8,14 +8,29 @@ const globalNode = require('global-node');
 const ordersSchema = require('../../schema/ordersSchema')
 const matchSchema = require('../../schema/matchSchema')
 
+//remaning
+const RemaningController = require('./RemaningController')
+
 class MatchesController extends controller {
 
     async CheckOrders(req, res) {
 
         try {
 
+            // await globalNode.setProperty('Buy_price', null);
+            //  await globalNode.setProperty('Sell_price', null);
+           // await globalNode.emptyAll()
+
             await this.GetMatchedOrder();
             await this.AddMatch();
+            await this.updatedMatchedOrdersEqual();
+            await this.updatedMatchedOrdersNotEqual();
+            await RemaningController.checkRemaningValue()
+
+
+         //   console.log(globalNode.listProperty())
+            //  await this.nullProperty();
+
 
         } catch (e) {
             console.error(e); // 30
@@ -29,17 +44,24 @@ class MatchesController extends controller {
 
     AddMatch() {
 
-
+        //price
         let SellPrice = globalNode.getValue('Sell_price');
         let BuyPrice = globalNode.getValue('Buy_price');
-
+        //status
         let Buy_status = globalNode.getValue('Buy_status');
         let Sell_status = globalNode.getValue('Sell_status');
 
-        console.log(SellPrice + ' is sellPrice')
-        console.log(BuyPrice + ' is buyPrice')
+        //   console.log(SellPrice + ' is sellPrice')
+        //  console.log(BuyPrice + ' is buyPrice')
 
-        if (SellPrice == BuyPrice && Sell_status != 'filled' && Buy_status != 'filled') {
+        if (SellPrice == BuyPrice
+            && Sell_status != 'filled'
+            && Buy_status != 'filled'
+            && SellPrice != null
+            && BuyPrice != null
+            && globalNode.getValue('Buy_remaining_value') === 0
+            && globalNode.getValue('Sell_remaining_value') === 0
+        ) {
 
             const taker_order_id = globalNode.getValue('Sell_id');
             const taker_user_id = globalNode.getValue('Sell_user_id');
@@ -77,27 +99,157 @@ class MatchesController extends controller {
                 console.log('match added to db');
             });
 
+        }
+    }
+
+    updatedMatchedOrdersEqual() {
+
+        //equal check
+
+        if (globalNode.getValue('Sell_volume') == globalNode.getValue('Buy_volume')
+            && globalNode.getValue('Sell_price') == globalNode.getValue('Buy_price')
+            && globalNode.getValue('Sell_status') !== 'filled'
+            && globalNode.getValue('Buy_status') !== 'filled'
+            && globalNode.getValue('Sell_price') != null
+            && globalNode.getValue('Buy_price') != null
+            && globalNode.getValue('Buy_remaining_value') === 0
+            && globalNode.getValue('Sell_remaining_value') === 0) {
+
             //update status order 1
             ordersSchema.findByIdAndUpdate(globalNode.getValue('Sell_id'), {'status': 'filled'},
                 function (err, docs) {
                     if (err) {
                         console.log(err)
                     } else {
-                        console.log("status order 1 updated ");
+                        console.log("status order Sell 1 updated ");
                     }
                 });
 
             //update status order 2
+            ordersSchema.findByIdAndUpdate(globalNode.getValue('Buy_id'), {'status': 'filled', 'remaining_value': 0},
+                function (err, docs) {
+                    if (err) {
+                        console.log(err)
+                    } else {
+                        console.log("status order Buy 2 updated ");
+                    }
+                });
+
+
+        }
+
+    }
+
+    updatedMatchedOrdersNotEqual() {
+
+        // console.log('updatedMatchedOrdersNotEqual runing')
+        // console.log('Buy_volume is' + globalNode.getValue('Buy_volume'))
+        //  console.log('Sell_volume is' + globalNode.getValue('Sell_volume'))
+
+        // check remaning value if both of them != #1 buy with sell
+        if (globalNode.getValue('Buy_volume') > globalNode.getValue('Sell_volume')
+            && globalNode.getValue('Sell_price') == globalNode.getValue('Buy_price')
+            && globalNode.getValue('Sell_status') !== 'filled'
+            && globalNode.getValue('Buy_status') !== 'filled'
+            && globalNode.getValue('Sell_price') != null
+            && globalNode.getValue('Buy_price') != null
+            && globalNode.getValue('Buy_remaining_value') === 0
+            && globalNode.getValue('Sell_remaining_value') === 0) {
+
+            let remaining_value = globalNode.getValue('Buy_volume') - globalNode.getValue('Sell_volume')
+            //console.log('remaning_value is ' + remaining_value)
+
+            // update pending
+            ordersSchema.findByIdAndUpdate(globalNode.getValue('Buy_id'), {
+                    'remaining_value': remaining_value,
+                    'status': 'pending'
+                },
+                function (err, docs) {
+                    if (err) {
+                        console.log(err)
+                    } else {
+                        console.log("status order Buy updated remaning " + remaining_value);
+                    }
+                });
+
+            // update filled
+            ordersSchema.findByIdAndUpdate(globalNode.getValue('Sell_id'), {'status': 'filled', 'remaining_value': 0},
+                function (err, docs) {
+                    if (err) {
+                        console.log(err)
+                    } else {
+                        console.log("status order Sell updated filled ");
+                    }
+                });
+
+        }
+
+
+        // revers check
+
+        // check remaning value if both of them != #1 buy with sell
+        if (globalNode.getValue('Buy_volume') < globalNode.getValue('Sell_volume')
+            && globalNode.getValue('Sell_price') == globalNode.getValue('Buy_price')
+            && globalNode.getValue('Sell_status') !== 'filled'
+            && globalNode.getValue('Buy_status') !== 'filled'
+            && globalNode.getValue('Sell_price') != null
+            && globalNode.getValue('Buy_price') != null
+            && globalNode.getValue('Buy_remaining_value') === 0
+            && globalNode.getValue('Sell_remaining_value') === 0) {
+
+            let remaining_value = globalNode.getValue('Sell_volume') - globalNode.getValue('Buy_volume')
+            // console.log('remaning_value is ' + remaining_value)
+
+            // update pending
+            ordersSchema.findByIdAndUpdate(globalNode.getValue('Sell_id'), {
+                    'remaining_value': remaining_value,
+                    'status': 'pending'
+                },
+                function (err, docs) {
+                    if (err) {
+                        console.log(err)
+                    } else {
+                        console.log("status order Sell 1 updated remaning " + remaining_value);
+                    }
+                });
+
+            // update filled
             ordersSchema.findByIdAndUpdate(globalNode.getValue('Buy_id'), {'status': 'filled'},
                 function (err, docs) {
                     if (err) {
                         console.log(err)
                     } else {
-                        console.log("status order 2 updated ");
+                        console.log("status order Buy 1 updated filled ");
                     }
                 });
 
         }
+
+    }
+
+    nullProperty() {
+
+        console.log('nulling is run')
+
+        globalNode.setProperty('Sell_id', null);
+        globalNode.setProperty('Sell_price', null);
+        globalNode.setProperty('Sell_user_id', null);
+        globalNode.setProperty('Sell_type', null);
+        globalNode.setProperty('Sell_data', null);
+        globalNode.setProperty('Sell_side', null);
+        globalNode.setProperty('Sell_market_id', null);
+        globalNode.setProperty('Sell_volume', null);
+        globalNode.setProperty('Sell_status', null);
+
+        globalNode.setProperty('Buy_id', null);
+        globalNode.setProperty('Buy_price', null);
+        globalNode.setProperty('Buy_user_id', null);
+        globalNode.setProperty('Buy_type', null);
+        globalNode.setProperty('Buy_data', null);
+        globalNode.setProperty('Buy_side', null);
+        globalNode.setProperty('Buy_market_id', null);
+        globalNode.setProperty('Buy_volume', null);
+        globalNode.setProperty('Buy_status', null);
     }
 
 }

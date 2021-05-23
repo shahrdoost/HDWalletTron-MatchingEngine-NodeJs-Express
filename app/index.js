@@ -35,13 +35,12 @@ module.exports = class Application {
     setMongoConnection() {
 
         mongoose.Promise = global.Promise;
-        mongoose.connect('mongodb://localhost/exchange', {
+         mongoose.connect('mongodb://localhost/exchange', {
             useNewUrlParser: true,
             useUnifiedTopology: true,
             useFindAndModify: false,
             useCreateIndex: true
         });
-
 
     }
 

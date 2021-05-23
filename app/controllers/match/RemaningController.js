@@ -134,11 +134,11 @@ class RemaningController extends controller {
 
                             // add match
                             const MatchAdd = new matchSchema({
-                                taker_order_id: globalNode.getValue('Sell_id'),
+                                taker_order_id: globalNode.getValue('Sell_idi'),
                                 taker_user_id: globalNode.getValue('Sell_user_id'),
                                 taker_fee_percentage: 0,
                                 taker_fee_volume: 0,
-                                maker_order_id: globalNode.getValue('Buy_id'),
+                                maker_order_id: globalNode.getValue('Buy_idi'),
                                 maker_user_id: globalNode.getValue('Buy_user_id'),
                                 maker_fee_percentage: 0,
                                 maker_fee_volume: 0,
@@ -273,11 +273,11 @@ class RemaningController extends controller {
 
                             // add match
                             const MatchAdd = new matchSchema({
-                                taker_order_id: globalNode.getValue('Sell_id'),
+                                taker_order_id: globalNode.getValue('Sell_idi'),
                                 taker_user_id: globalNode.getValue('Sell_user_id'),
                                 taker_fee_percentage: 0,
                                 taker_fee_volume: 0,
-                                maker_order_id: globalNode.getValue('Buy_id'),
+                                maker_order_id: globalNode.getValue('Buy_idi'),
                                 maker_user_id: globalNode.getValue('Buy_user_id'),
                                 maker_fee_percentage: 0,
                                 maker_fee_volume: 0,

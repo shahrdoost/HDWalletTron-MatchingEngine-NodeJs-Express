@@ -11,31 +11,27 @@ const matchSchema = require('../../schema/matchSchema')
 //remaning
 const RemaningController = require('./RemaningController')
 
+//plimit
+const pLimit = require('p-limit');
+const limit = pLimit(1);
+
 class MatchesController extends controller {
 
-    async CheckOrders(req, res) {
+    CheckOrders(req, res) {
 
-        try {
+        const input = [
+            limit(() => this.GetMatchedOrder()),
+            limit(() => this.AddMatch()),
+            limit(() => this.updatedMatchedOrdersEqual()),
+            limit(() => this.updatedMatchedOrdersNotEqual()),
+            limit(() => RemaningController.checkRemaningValue()),
+        ];
 
-            // await globalNode.setProperty('Buy_price', null);
-            //  await globalNode.setProperty('Sell_price', null);
-           // await globalNode.emptyAll()
-
-            await this.GetMatchedOrder();
-            await this.AddMatch();
-            await this.updatedMatchedOrdersEqual();
-            await this.updatedMatchedOrdersNotEqual();
-            await RemaningController.checkRemaningValue()
-
-
-         //   console.log(globalNode.listProperty())
-            //  await this.nullProperty();
-
-
-        } catch (e) {
-            console.error(e); // 30
-        }
-
+        (async () => {
+            // Only one promise is run at once
+            const result = await Promise.all(input);
+            console.log(result);
+        })();
     }
 
     GetMatchedOrder() {
@@ -63,11 +59,11 @@ class MatchesController extends controller {
             && globalNode.getValue('Sell_remaining_value') === 0
         ) {
 
-            const taker_order_id = globalNode.getValue('Sell_id');
+            const taker_order_id = globalNode.getValue('Sell_idi');
             const taker_user_id = globalNode.getValue('Sell_user_id');
             const taker_fee_percentage = '123';
             const taker_fee_volume = '123';
-            const maker_order_id = globalNode.getValue('Buy_id');
+            const maker_order_id = globalNode.getValue('Buy_idi');
             const maker_user_id = globalNode.getValue('Buy_user_id');
             const maker_fee_percentage = '123';
             const maker_fee_volume = '123';

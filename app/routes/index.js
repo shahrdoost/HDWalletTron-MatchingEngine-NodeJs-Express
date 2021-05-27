@@ -9,6 +9,7 @@ const WalletAddressController = require('../controllers/wallet/Trx/WalletAddress
 const TronGridController = require('../controllers/wallet/Trx/TronGridController')
 const OrdersController = require('../controllers/match/OrdersController')
 const MatchesController = require('../controllers/match/MatchesController')
+const RunController = require('../controllers/match/Run')
 
 router.get('/', IndexController.index)
 
@@ -33,11 +34,8 @@ router.post('/order/send', [
     //check('password').isLength({min: 5}).trim().escape()
 ], OrdersController.AddOrder)
 
-//GetLastOrder
-router.get('/order/last', OrdersController.GetMatchedOrder)
-
 //check order
-router.get('/match/check', MatchesController.CheckOrders)
+router.get('/run', RunController.run)
 
 
 module.exports = router

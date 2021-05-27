@@ -10,7 +10,7 @@ const MongoStore = require('connect-mongo');
 const mongoose = require('mongoose')
 const flash = require('connect-flash')
 const passport = require('passport')
-
+const redis = require('redis');
 
 module.exports = class Application {
 
@@ -20,6 +20,7 @@ module.exports = class Application {
         this.setMongoConnection();
         this.setConfig();
         this.setRouters();
+        this.setRedis();
 
     }
 
@@ -35,7 +36,7 @@ module.exports = class Application {
     setMongoConnection() {
 
         mongoose.Promise = global.Promise;
-         mongoose.connect('mongodb://localhost/exchange', {
+        mongoose.connect('mongodb://localhost/exchange', {
             useNewUrlParser: true,
             useUnifiedTopology: true,
             useFindAndModify: false,
@@ -60,6 +61,18 @@ module.exports = class Application {
         app.use(flash());
 
 
+    }
+
+    setRedis() {
+        const client = redis.createClient({
+            host: '127.0.0.1',
+            port: 6379,
+        //    password: ''
+        });
+
+        client.on('error', err => {
+            console.log('Error ' + err);
+        });
     }
 
     setRouters() {

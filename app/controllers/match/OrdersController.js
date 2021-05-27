@@ -3,6 +3,10 @@ const mongoose = require("mongoose");
 const {validationResult} = require('express-validator');
 const ordersSchema = require('../../schema/ordersSchema')
 const globalNode = require('global-node');
+const redis = require('redis');
+const client = redis.createClient();
+const { promisifyAll } = require('bluebird');
+promisifyAll(redis);
 
 class OrdersController extends controller {
 
@@ -107,41 +111,45 @@ class OrdersController extends controller {
 
                                 console.log('matched' + '-' + u.price + '-' + uu.price + ' at ' + datetime)
 
-                                globalNode.setProperty('Sell_id', uu._id);
-                                globalNode.setProperty('Sell_idi', uu.id);
-                                globalNode.setProperty('Sell_price', uu.price);
-                                globalNode.setProperty('Sell_user_id', uu.user_id);
-                                globalNode.setProperty('Sell_type', uu.type);
-                                globalNode.setProperty('Sell_data', uu.data);
-                                globalNode.setProperty('Sell_side', uu.side);
-                                globalNode.setProperty('Sell_market_id', uu.market_id);
-                                globalNode.setProperty('Sell_volume', uu.volume);
-                                globalNode.setProperty('Sell_status', uu.status);
-                                globalNode.setProperty('Sell_remaining_value', uu.remaining_value);
+                                const runSetRedisif = async () => {
+                                    await client.setAsync('Sell_id', uu._id.toString());
+                                    await client.setAsync('Sell_idi', uu.id.toString());
+                                    await client.setAsync('Sell_price', uu.price.toString());
+                                    await client.setAsync('Sell_user_id', uu.user_id.toString());
+                                    await client.setAsync('Sell_type', uu.type);
+                                    await client.setAsync('Sell_data', uu.data);
+                                    await client.setAsync('Sell_side', uu.side);
+                                    await client.setAsync('Sell_market_id', uu.market_id);
+                                    await client.setAsync('Sell_volume', uu.volume.toString());
+                                    await client.setAsync('Sell_status', uu.status);
+                                    await client.setAsync('Sell_remaining_value', uu.remaining_value.toString());
 
 
-                                globalNode.setProperty('Buy_id', u._id);
-                                globalNode.setProperty('Buy_idi', u.id);
-                                globalNode.setProperty('Buy_price', u.price);
-                                globalNode.setProperty('Buy_user_id', u.user_id);
-                                globalNode.setProperty('Buy_type', u.type);
-                                globalNode.setProperty('Buy_data', u.data);
-                                globalNode.setProperty('Buy_side', u.side);
-                                globalNode.setProperty('Buy_market_id', u.market_id);
-                                globalNode.setProperty('Buy_volume', u.volume);
-                                globalNode.setProperty('Buy_status', u.status);
-                                globalNode.setProperty('Buy_remaining_value', u.remaining_value);
+                                    await client.setAsync('Buy_id', u._id.toString());
+                                    await client.setAsync('Buy_idi', u.id.toString());
+                                    await client.setAsync('Buy_price', u.price.toString());
+                                    await client.setAsync('Buy_user_id', u.user_id.toString());
+                                    await client.setAsync('Buy_type', u.type);
+                                    await client.setAsync('Buy_data', u.data);
+                                    await client.setAsync('Buy_side', u.side);
+                                    await client.setAsync('Buy_market_id', u.market_id);
+                                    await client.setAsync('Buy_volume', u.volume.toString());
+                                    await client.setAsync('Buy_status', u.status);
+                                    await client.setAsync('Buy_remaining_value', u.remaining_value.toString());
 
-                                // set key is matched
-                                globalNode.setProperty('isMatched', 'true');
+                                    // set key is matched
+                                    await client.setAsync('isMatched', 'true');
 
+                                };
+
+                                runSetRedisif();
                             } else {
                                 //   console.log('not matched Orders')
                                 // set key is matched
                                 globalNode.setProperty('isMatched', 'false');
 
-                                globalNode.setProperty('Sell_price', uu.price);
-                                globalNode.setProperty('Buy_price', u.price);
+                                globalNode.setProperty('Sell_price', uu.price.toString());
+                                globalNode.setProperty('Buy_price', u.price.toString());
 
                             }
 

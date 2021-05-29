@@ -1,21 +1,21 @@
 const controller = require('../controller')
 const mongoose = require("mongoose");
-const {validationResult} = require('express-validator');
+const { validationResult } = require('express-validator');
 const ordersSchema = require('../../schema/ordersSchema')
-const globalNode = require('global-node');
+// const globalNode = require('global-node');
 const redis = require('redis');
 const client = redis.createClient();
-const {promisifyAll} = require('bluebird');
+const { promisifyAll } = require('bluebird');
 promisifyAll(redis);
 
 class OrdersController extends controller {
 
-    AddOrder(req, res) {
+    async AddOrder(req, res) {
 
         //validate body param
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(422).json({errors: errors.array()});
+            return res.status(422).json({ errors: errors.array() });
         }
 
         // set variable
@@ -58,7 +58,7 @@ class OrdersController extends controller {
         // return all orders
         var orders = [];
 
-        ordersSchema.find({}).sort({created_at: -1}).exec(function (err, records) {
+        ordersSchema.find({}).sort({ created_at: -1 }).exec(function (err, records) {
 
             records.forEach(function (post, i) {
                 orders.push({
@@ -89,69 +89,73 @@ class OrdersController extends controller {
 
         const doSomethingAsync = async () => {
 
-            await client.setAsync('loop', '0')
-            ordersSchema.find({'side': 'buy',
-                'status': 'pending'}).exec(function (err, post2) {
+
+            try {
+
+                await client.setAsync('loop', '0')
+                const post2 = await ordersSchema.find({
+                    'side': 'buy',
+                    'status': 'pending'
+                }).exec()
                 post2.forEach(async (u) => {
 
 
                     const runSetRedisif = async () => {
                         // search in sell prices
                         await ordersSchema.findOne({
-                                'side': 'sell',
-                                'status': 'pending',
-                                'price': u.price
-                            }, async (err, uu) => {
+                            'side': 'sell',
+                            'status': 'pending',
+                            'price': u.price
+                        }, async (err, uu) => {
 
-                                if (uu != null) {
-                                    var i;
-                                    for (i = await client.getAsync('loop'); i < 1; i++) {
+                            if (uu != null) {
+                                var datetime = new Date();
+                                await console.log('matched' + '-' + uu.price + ' at ' + datetime)
+                                await console.log(await client.getAsync('isMatched'))
 
-                                        await client.setAsync('loop', '1')
+                                await client.setAsync('isMatched', 'true');
 
-                                        var datetime = new Date();
-                                        await console.log('matched' + '-' + uu.price + ' at ' + datetime)
-                                        await console.log(await client.getAsync('isMatched'))
-
-                                        await client.setAsync('isMatched', 'true');
-
-                                        await client.setAsync('Sell_id', uu._id.toString());
-                                        await client.setAsync('Sell_idi', uu.id.toString());
-                                        await client.setAsync('Sell_price', uu.price.toString());
-                                        await client.setAsync('Sell_user_id', uu.user_id.toString());
-                                        await client.setAsync('Sell_type', uu.type);
-                                        await client.setAsync('Sell_data', uu.data);
-                                        await client.setAsync('Sell_side', uu.side);
-                                        await client.setAsync('Sell_market_id', uu.market_id);
-                                        await client.setAsync('Sell_volume', uu.volume.toString());
-                                        await client.setAsync('Sell_status', uu.status);
-                                        await client.setAsync('Sell_remaining_value', uu.remaining_value.toString());
+                                await client.setAsync('Sell_id', uu._id.toString());
+                                await client.setAsync('Sell_idi', uu.id.toString());
+                                await client.setAsync('Sell_price', uu.price.toString());
+                                await client.setAsync('Sell_user_id', uu.user_id.toString());
+                                await client.setAsync('Sell_type', uu.type);
+                                await client.setAsync('Sell_data', uu.data);
+                                await client.setAsync('Sell_side', uu.side);
+                                await client.setAsync('Sell_market_id', uu.market_id);
+                                await client.setAsync('Sell_volume', uu.volume.toString());
+                                await client.setAsync('Sell_status', uu.status);
+                                await client.setAsync('Sell_remaining_value', uu.remaining_value.toString());
 
 
-                                        await client.setAsync('Buy_id', u._id.toString());
-                                        await client.setAsync('Buy_idi', u.id.toString());
-                                        await client.setAsync('Buy_price', u.price.toString());
-                                        await client.setAsync('Buy_user_id', u.user_id.toString());
-                                        await client.setAsync('Buy_type', u.type);
-                                        await client.setAsync('Buy_data', u.data);
-                                        await client.setAsync('Buy_side', u.side);
-                                        await client.setAsync('Buy_market_id', u.market_id);
-                                        await client.setAsync('Buy_volume', u.volume.toString());
-                                        await client.setAsync('Buy_status', u.status);
-                                        await client.setAsync('Buy_remaining_value', u.remaining_value.toString());
+                                await client.setAsync('Buy_id', u._id.toString());
+                                await client.setAsync('Buy_idi', u.id.toString());
+                                await client.setAsync('Buy_price', u.price.toString());
+                                await client.setAsync('Buy_user_id', u.user_id.toString());
+                                await client.setAsync('Buy_type', u.type);
+                                await client.setAsync('Buy_data', u.data);
+                                await client.setAsync('Buy_side', u.side);
+                                await client.setAsync('Buy_market_id', u.market_id);
+                                await client.setAsync('Buy_volume', u.volume.toString());
+                                await client.setAsync('Buy_status', u.status);
+                                await client.setAsync('Buy_remaining_value', u.remaining_value.toString());
 
-                                        // set key is matched
-                                        // await console.log(await client.getAsync('isMatched'))
-                                    }
-                                }
+                                // set key is matched
+                                // await console.log(await client.getAsync('isMatched'))
+
                             }
+                        }
                         );
 
                     }
-                    runSetRedisif();
+                    await runSetRedisif();
 
                 });
-            });
+            } catch (error) {
+
+            }
+
+
 
         }
 

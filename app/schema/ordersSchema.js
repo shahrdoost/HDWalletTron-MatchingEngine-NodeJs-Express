@@ -25,7 +25,7 @@ ordersSchema.pre('save', function (next) {
         return;
     }
 
-    autoIncrementModelID('activities', this, next);
+    autoIncrementModelID('activitiesOrders', this, next);
 });
 
 module.exports = mongoose.model('orders', ordersSchema);

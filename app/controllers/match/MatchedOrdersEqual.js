@@ -4,9 +4,13 @@ const mongoose = require("mongoose");
 const OrdersController = require('./OrdersController')
 const globalNode = require('global-node');
 
+//schema
 const ordersSchema = require('../../schema/ordersSchema')
 const matchSchema = require('../../schema/matchSchema')
 const reporterSchema = require('../../schema/reporterSchems')
+
+//reporter
+const RunController = require('./Run')
 
 const AddMatchToDb = require('./AddMatchToDb')
 //redis
@@ -27,29 +31,46 @@ class MatchedOrdersEqual extends controller {
                 && await client.getAsync('Buy_status') !== 'filled'
                 && await client.getAsync('Sell_price') != null
                 && await client.getAsync('Buy_price') != null
-                && await client.getAsync('Buy_remaining_value') === 0
-                && await client.getAsync('Sell_remaining_value') === 0) {
+                && await client.getAsync('Buy_remaining_value') == 0
+                && await client.getAsync('Sell_remaining_value') == 0) {
+
 
                 //update status order 1
                 ordersSchema.findByIdAndUpdate(await client.getAsync('Sell_id'), {'status': 'filled'},
-                    function (err, docs) {
+                    async (err, docs) => {
                         if (err) {
                             console.log(err)
                         } else {
                             console.log("status order Sell 1 updated ");
+
+                            const RunController = require('./Run')
+                            RunController.reporter('MatchedOrdersEqual'
+                                , 'updateMatchedOrdersEqual'
+                                , 'status order Sell 1 updated'
+                                , await client.getAsync('Sell_volume')
+                                ,  await client.getAsync('Sell_idi'))
                         }
                     });
 
+                globalNode.setProperty('Buy_idi', await client.getAsync('Buy_idi'));
+                globalNode.setProperty('Sell_volume', await client.getAsync('Sell_volume'));
                 //update status order 2
                 ordersSchema.findByIdAndUpdate(await client.getAsync('Buy_id'), {
                         'status': 'filled',
                         'remaining_value': 0
                     },
-                    function (err, docs) {
+                    async (err, docs) =>{
                         if (err) {
                             console.log(err)
                         } else {
                             console.log("status order Buy 2 updated ");
+
+                            const RunController = require('./Run')
+                            RunController.reporter('MatchedOrdersEqual'
+                                , 'updateMatchedOrdersEqual'
+                                , 'status order Buy 2 updated'
+                                , await client.getAsync('Sell_volume')
+                                ,  await client.getAsync('Buy_idi'))
                         }
                     });
 

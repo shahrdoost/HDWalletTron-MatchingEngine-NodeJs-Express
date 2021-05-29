@@ -8,6 +8,7 @@ const globalNode = require('global-node');
 // schema
 const ordersSchema = require('../../schema/ordersSchema')
 const matchSchema = require('../../schema/matchSchema')
+const reporterSchema = require('../../schema/reporterSchems')
 
 //remaning
 const RemaningController = require('./RemaningController')
@@ -47,6 +48,22 @@ class RunController extends controller {
 
     }
 
+    reporter(file,method,message,value,orderId){
+
+        const ReporterAdd = new reporterSchema({
+            file: file,
+            method: method,
+            message: message,
+            value: value,
+            order_id: orderId,
+            created_at: Date.now()
+        });
+
+        ReporterAdd.save(function (err, book) {
+            if (err) return console.error(err);
+        });
+    }
+
     deleteRedisKeys() {
         const runApplication = async () => {
             await client.flushdb(function (err, succeeded) {
@@ -55,6 +72,8 @@ class RunController extends controller {
         }
         runApplication();
     }
+
+
 }
 
 module.exports = new RunController;

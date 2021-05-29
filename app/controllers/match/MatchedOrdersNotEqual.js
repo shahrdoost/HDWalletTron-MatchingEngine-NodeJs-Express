@@ -4,6 +4,9 @@ const globalNode = require('global-node');
 //schema
 const ordersSchema = require('../../schema/ordersSchema')
 const AddMatchToDb = require('./AddMatchToDb')
+//reporter
+const RunController = require('./Run')
+
 //redis
 const redis = require('redis');
 const client = redis.createClient();
@@ -32,11 +35,18 @@ class MatchedOrdersNotEqual extends controller {
                         'remaining_value': remaining_value,
                         'status': 'pending'
                     },
-                    function (err, docs) {
+                    async err => {
                         if (err) {
                             console.log(err)
                         } else {
                             console.log("status order Buy updated remaning " + remaining_value);
+
+                            const RunController = require('./Run')
+                            RunController.reporter('MatchedOrdersNotEqual'
+                                , 'updatedMatchedOrdersNotEqual'
+                                , "status order Buy updated remaning " + remaining_value
+                                , await client.getAsync('Sell_volume')
+                                , await client.getAsync('Sell_idi'))
                         }
                     });
 
@@ -45,11 +55,17 @@ class MatchedOrdersNotEqual extends controller {
                         'status': 'filled',
                         'remaining_value': 0
                     },
-                    function (err, docs) {
+                    async err => {
                         if (err) {
                             console.log(err)
                         } else {
                             console.log("status order Sell updated filled ");
+                            const RunController = require('./Run')
+                            RunController.reporter('MatchedOrdersNotEqual'
+                                , 'updatedMatchedOrdersNotEqual'
+                                , "status order Sell updated filled "
+                                , await client.getAsync('Sell_volume')
+                                , await client.getAsync('Sell_idi'))
                         }
                     });
 
@@ -75,21 +91,35 @@ class MatchedOrdersNotEqual extends controller {
                         'remaining_value': remaining_value,
                         'status': 'pending'
                     },
-                    function (err, docs) {
+                    async err => {
                         if (err) {
                             console.log(err)
                         } else {
                             console.log("status order Sell 1 updated remaning " + remaining_value);
+
+                            const RunController = require('./Run')
+                            RunController.reporter('MatchedOrdersNotEqual'
+                                , 'updatedMatchedOrdersNotEqual'
+                                , "status order Sell 1 updated remaning " + remaining_value
+                                ,await client.getAsync('Buy_volume')
+                                ,await client.getAsync('Sell_idi'))
                         }
                     });
 
                 // update filled
                 ordersSchema.findByIdAndUpdate(await client.getAsync('Buy_id'), {'status': 'filled'},
-                    function (err, docs) {
+                    async err => {
                         if (err) {
                             console.log(err)
                         } else {
                             console.log("status order Buy 1 updated filled ");
+
+                            const RunController = require('./Run')
+                            RunController.reporter('MatchedOrdersNotEqual'
+                                , 'updatedMatchedOrdersNotEqual'
+                                , "status order Buy 1 updated filled "
+                                , await client.getAsync('Buy_volume')
+                                , await client.getAsync('Buy_idi'))
                         }
                     });
 

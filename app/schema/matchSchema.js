@@ -25,7 +25,7 @@ matchSchema.pre('save', function (next) {
         return;
     }
 
-    autoIncrementModelID('activities', this, next);
+    autoIncrementModelID('activitiesMatches', this, next);
 });
 
 module.exports = mongoose.model('matches', matchSchema);

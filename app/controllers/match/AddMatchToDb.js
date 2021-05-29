@@ -54,6 +54,8 @@ class AddMatchToDb extends controller {
                 console.log('nulling is ' + succeeded); // will be true if successfull
             });
 
+            await client.setAsync('isMatched', 'false');
+
         }
         runApplication();
     }

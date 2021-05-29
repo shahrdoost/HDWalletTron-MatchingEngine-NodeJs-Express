@@ -8,6 +8,7 @@ var reporterSchema = new Schema({
     , method: String
     , message: String
     , value: String
+    , order_id : String
     , created_at: {type: Date, default: null}
 });
 

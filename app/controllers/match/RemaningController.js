@@ -36,7 +36,7 @@ class RemaningController extends controller {
 
 
             if (
-                await client.getAsync('Buy_remaining_value') != null
+                await client.getAsync('Buy_remaining_value') != 0
                 && await client.getAsync('Sell_status') != 'filled'
                 && await client.getAsync('Buy_status') != 'filled'
                 && await client.getAsync('Sell_price') != null
@@ -73,8 +73,8 @@ class RemaningController extends controller {
                                 var remaining_value;
                                 var remaining_value2;
                                 if (await client.getAsync('Sell_remaining_value') > 0) {
-                                    var remaining_value = await client.getAsync('Buy_remaining_value') - await client.getAsync('Sell_remaining_value')
-                                    var remaining_value2 = await client.getAsync('Sell_remaining_value') - await client.getAsync('Buy_remaining_value')
+                                    var remaining_value2 = await client.getAsync('Buy_remaining_value') - await client.getAsync('Sell_remaining_value')
+                                    var remaining_value = await client.getAsync('Sell_remaining_value') - await client.getAsync('Buy_remaining_value')
                                 } else {
                                     var remaining_value = await client.getAsync('Sell_volume') - await client.getAsync('Buy_remaining_value')
                                     var remaining_value2 = await client.getAsync('Buy_remaining_value') - await client.getAsync('Sell_volume')
@@ -116,11 +116,17 @@ class RemaningController extends controller {
                                         'remaining_value': remaining_value,
                                         'status': status
                                     },
-                                    function (err, docs) {
+                                    async (err, docs) => {
                                         if (err) {
                                             console.log(err)
                                         } else {
                                             console.log("status order Sell 1 updated remaning " + remaining_value);
+                                            const RunController = require('./Run')
+                                            RunController.reporter("RemaningController"
+                                                , 'checkRemaningValue'
+                                                , "status order Sell 1 updated remaning " + remaining_value
+                                                , await client.getAsync('Buy_remaining_value')
+                                                , await client.getAsync('Sell_idi'))
                                         }
                                     });
 
@@ -129,17 +135,23 @@ class RemaningController extends controller {
                                         'remaining_value': remaining_value2,
                                         'status': status2
                                     },
-                                    function (err, docs) {
+                                    async (err, docs) => {
                                         if (err) {
                                             console.log(err)
                                         } else {
                                             console.log("status order Buy 1 updated remaning " + remaining_value2);
+                                            const RunController = require('./Run')
+                                            RunController.reporter("RemaningController"
+                                                , 'checkRemaningValue'
+                                                , "status order Buy 1 updated remaning " + remaining_value2
+                                                , await client.getAsync('Buy_remaining_value')
+                                                , await client.getAsync('Buy_idi'))
                                         }
                                     });
 
 
                                 // add match
-                                const MatchAdd = new matchSchema({
+                                 const MatchAdd = new matchSchema({
                                     taker_order_id: await client.getAsync('Sell_idi'),
                                     taker_user_id: await client.getAsync('Sell_user_id'),
                                     taker_fee_percentage: 0,
@@ -155,14 +167,16 @@ class RemaningController extends controller {
                                     taker_side: 'buy'
                                 });
 
-                                MatchAdd.save(function (err, book) {
+                                await MatchAdd.save(function (err, book) {
                                     if (err) return console.error(err);
                                     console.log('match remaning buy added to db');
                                 });
 
-                                client.flushdb(function (err, succeeded) {
+                                await client.flushdb(function (err, succeeded) {
                                     console.log('nulling is ' + succeeded); // will be true if successfull
                                 });
+
+                                await client.setAsync('isMatched', 'false');
 
                             }
 
@@ -182,7 +196,7 @@ class RemaningController extends controller {
 
 
             if (
-                await client.getAsync('Sell_remaining_value') != null
+                await client.getAsync('Sell_remaining_value') != 0
                 && await client.getAsync('Sell_status') != 'filled'
                 && await client.getAsync('Buy_status') != 'filled'
                 && await client.getAsync('Sell_price') != null
@@ -199,7 +213,7 @@ class RemaningController extends controller {
                 // check the number isnot negative
                 if (await client.getAsync('Sell_remaining_value') > 0) {
 
-                    console.log('remaning orders inside Sell_remaining_value run')
+                   // console.log('remaning orders inside Sell_remaining_value run')
 
                     ordersSchema.find({
                         'side': 'sell',
@@ -260,11 +274,17 @@ class RemaningController extends controller {
                                         'remaining_value': remaining_value,
                                         'status': status
                                     },
-                                    function (err, docs) {
+                                    async (err, docs) => {
                                         if (err) {
                                             console.log(err)
                                         } else {
                                             console.log("status order Buy 1 updated remaning " + remaining_value);
+                                            const RunController = require('./Run')
+                                            RunController.reporter("RemaningController"
+                                                , 'checkRemaningValue'
+                                                , "status order Buy 1 updated remaning " + remaining_value
+                                                , await client.getAsync('Sell_remaining_value')
+                                                , await client.getAsync('Buy_idi'))
                                         }
                                     });
 
@@ -273,11 +293,17 @@ class RemaningController extends controller {
                                         'remaining_value': remaining_value2,
                                         'status': status2
                                     },
-                                    function (err, docs) {
+                                    async (err, docs) => {
                                         if (err) {
                                             console.log(err)
                                         } else {
                                             console.log("status order Sell 1 updated remaning " + remaining_value2);
+                                            const RunController = require('./Run')
+                                            RunController.reporter("RemaningController"
+                                                , 'checkRemaningValue'
+                                                , "status order Sell 1 updated remaning " + remaining_value2
+                                                , await client.getAsync('Sell_remaining_value')
+                                                , await client.getAsync('Sell_idi'))
                                         }
                                     });
 
@@ -298,14 +324,16 @@ class RemaningController extends controller {
                                     taker_side: 'sell'
                                 });
 
-                                MatchAdd.save(function (err, book) {
+                                await  MatchAdd.save(function (err, book) {
                                     if (err) return console.error(err);
                                     console.log('match remaning buy added to db');
                                 });
 
-                                client.flushdb(function (err, succeeded) {
+                                await client.flushdb(function (err, succeeded) {
                                     console.log('nulling is ' + succeeded); // will be true if successfull
                                 });
+
+                                await client.setAsync('isMatched', 'false');
                             }
 
 
